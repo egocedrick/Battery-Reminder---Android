@@ -1,15 +1,51 @@
 package com.example.batterynotifier2
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
+import android.app.admin.DevicePolicyManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class BatteryService : Service() {
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+            val batteryPct = (level / scale.toFloat() * 100).toInt()
+
+            Log.d("BatteryService", "Battery level: $batteryPct%")
+
+            if (batteryPct <= 20 && batteryPct > 5) {
+                showNotification("Battery low ($batteryPct%)", "Please charge soon.")
+            }
+
+            if (batteryPct <= 5) {
+                showNotification("Battery Critical ($batteryPct%)", "Device will lock.")
+
+                val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
+
+                if (dpm.isAdminActive(componentName)) {
+                    dpm.lockNow() // 🔒 lock device immediately
+                } else {
+                    showNotification("Admin not active", "Cannot lock device. Please enable Device Admin.")
+                    Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
+                }
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -30,12 +66,31 @@ class BatteryService : Service() {
             .build()
 
         startForeground(1, notification)
+
+        // ✅ Register continuous battery monitoring
+        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Your battery monitoring logic here...
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(batteryReceiver)
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
+
+    @SuppressLint("NotificationPermission")
+    private fun showNotification(title: String, message: String) {
+        val notification = NotificationCompat.Builder(this, "battery_service")
+            .setContentTitle(title)
+            .setContentText(message)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .build()
+
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(title.hashCode(), notification)
+    }
 }
