@@ -27,21 +27,22 @@ class BatteryService : Service() {
 
             Log.d("BatteryService", "Battery level: $batteryPct%")
 
-            if (batteryPct <= 20 && batteryPct > 5) {
-                showNotification("Battery low ($batteryPct%)", "Please charge soon.")
-            }
+            when (batteryPct) {
+                20 -> {
+                    showNotification("Battery low (20%)", "Please charge soon.")
+                }
+                5 -> {
+                    showNotification("Battery Critical (5%)", "Device will lock.")
 
-            if (batteryPct <= 5) {
-                showNotification("Battery Critical ($batteryPct%)", "Device will lock.")
+                    val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                    val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
 
-                val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
-
-                if (dpm.isAdminActive(componentName)) {
-                    dpm.lockNow() // 🔒 lock device immediately
-                } else {
-                    showNotification("Admin not active", "Cannot lock device. Please enable Device Admin.")
-                    Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
+                    if (dpm.isAdminActive(componentName)) {
+                        dpm.lockNow() // 🔒 lock device immediately
+                    } else {
+                        showNotification("Admin not active", "Cannot lock device. Please enable Device Admin.")
+                        Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
+                    }
                 }
             }
         }
