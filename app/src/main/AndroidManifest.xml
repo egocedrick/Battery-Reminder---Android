@@ -2,7 +2,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.batterynotifier2">
 
-    <!-- Permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
@@ -15,7 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Batterynotifier2">
 
-        <!-- Main Activity -->
         <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -24,7 +22,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Boot Receiver -->
         <receiver android:name=".BootReceiver"
             android:enabled="true"
             android:exported="true">
@@ -33,14 +30,12 @@
             </intent-filter>
         </receiver>
 
-        <!-- Battery Service -->
         <service android:name=".BatteryService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync"
             tools:ignore="ForegroundServicePermission" />
 
-        <!-- Device Admin Receiver -->
         <receiver android:name=".MyDeviceAdminReceiver"
             android:exported="true"
             android:permission="android.permission.BIND_DEVICE_ADMIN"

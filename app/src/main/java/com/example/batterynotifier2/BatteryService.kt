@@ -38,7 +38,7 @@ class BatteryService : Service() {
                     val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
 
                     if (dpm.isAdminActive(componentName)) {
-                        dpm.lockNow() // 🔒 lock device immediately
+                        dpm.lockNow()
                     } else {
                         showNotification("Admin not active", "Cannot lock device. Please enable Device Admin.")
                         Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
@@ -68,7 +68,6 @@ class BatteryService : Service() {
 
         startForeground(1, notification)
 
-        // ✅ Register continuous battery monitoring
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 

