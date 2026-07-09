@@ -11,13 +11,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import android.os.Build
 import android.os.IBinder
 import android.app.admin.DevicePolicyManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class BatteryService : Service() {
+
+    companion object {
+        const val FOREGROUND_ID = 1000
+        const val NOTIF_20 = 2000
+        const val NOTIF_5 = 3000
+    }
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -27,12 +32,9 @@ class BatteryService : Service() {
 
             Log.d("BatteryService", "Battery level: $batteryPct%")
 
-            when (batteryPct) {
-                20 -> {
-                    showNotification("Battery low (20%)", "Please charge soon.")
-                }
-                5 -> {
-                    showNotification("Battery Critical (5%)", "Device will lock.")
+            when {
+                batteryPct <= 5 -> {
+                    showNotification(NOTIF_5,"Battery Critical (5%)", "Device will lock.")
 
                     val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
                     val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
@@ -40,9 +42,12 @@ class BatteryService : Service() {
                     if (dpm.isAdminActive(componentName)) {
                         dpm.lockNow()
                     } else {
-                        showNotification("Admin not active", "Cannot lock device. Please enable Device Admin.")
+                        showNotification(NOTIF_5, "Admin not active", "Cannot lock device. Please enable admin.")
                         Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
                     }
+                }
+                batteryPct <= 20 -> {
+                    showNotification(NOTIF_20,"Battery low (20%)", "Please charge soon.")
                 }
             }
         }
@@ -50,15 +55,20 @@ class BatteryService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            val foregroundChannel = NotificationChannel(
                 "battery_service",
                 "Battery Service",
                 NotificationManager.IMPORTANCE_LOW
             )
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
+
+            val alertChannel = NotificationChannel(
+                "battery_alerts",
+                "Battery Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(foregroundChannel)
+            manager.createNotificationChannel(alertChannel)
 
         val notification: Notification = NotificationCompat.Builder(this, "battery_service")
             .setContentTitle("Battery Service Running")
@@ -66,7 +76,7 @@ class BatteryService : Service() {
             .setSmallIcon(android.R.drawable.ic_lock_idle_charging)
             .build()
 
-        startForeground(1, notification)
+        startForeground(FOREGROUND_ID, notification)
 
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
@@ -83,14 +93,14 @@ class BatteryService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     @SuppressLint("NotificationPermission")
-    private fun showNotification(title: String, message: String) {
-        val notification = NotificationCompat.Builder(this, "battery_service")
+    private fun showNotification(id: Int = 0 ,title: String, message: String) {
+        val notification = NotificationCompat.Builder(this, "battery_alerts")
             .setContentTitle(title)
             .setContentText(message)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .build()
 
         val manager = getSystemService(NotificationManager::class.java)
-        manager.notify(title.hashCode(), notification)
+        manager.notify(id, notification)
     }
 }
