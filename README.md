@@ -1,7 +1,7 @@
 # Battery Reminder - Android
 
 ## Overview
-A Kotlin-based Android system application that provides persistent battery alerts at critical levels. Designed to remind users to charge their device immediately, the app leverages overlay dialogs and device admin permissions to ensure visibility and reliability.
+A Kotlin-based Android system application that provides persistent battery alerts at critical levels. Designed to remind users to charge their devices immediately, the app leverages overlay dialogs and device admin permissions to ensure visibility and reliability.
 
 ## Core Workflow
 1. **20% Battery Level**
@@ -25,6 +25,11 @@ A Kotlin-based Android system application that provides persistent battery alert
   - Overlay permissions
   - Device admin integration
   - Battery state monitoring
+ 
+## Impact
+- Notifies users when the battery reaches 20% or 5%.
+- Prevents unexpected device shutdown during work.
+- Improves user awareness by overlaying dialogs across different backgrounds
 
 ## Project Structure
 - `/ui` – Dialog layouts and activities
