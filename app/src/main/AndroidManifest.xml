@@ -1,13 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.batterynotifier2">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"
-        tools:ignore="ProtectedPermissions" />
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -16,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Batterynotifier2">
 
-        <activity android:name=".MainActivity"
+        <activity android:name="com.example.batterynotifier2.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -24,7 +22,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".BootReceiver"
+        <receiver android:name="com.example.batterynotifier2.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -32,20 +30,23 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".BatteryService"
+        <receiver android:name="com.example.batterynotifier2.InstallReceiver"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse" />
-
-        <receiver android:name=".MyDeviceAdminReceiver"
-            android:exported="true"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            tools:ignore="IntentFilterExportedReceiver">
-            <meta-data android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_receiver"/>
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
+
+        <service android:name="com.example.batterynotifier2.BatteryService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="battery-monitoring"/>
+
+        </service>
+
     </application>
 </manifest>

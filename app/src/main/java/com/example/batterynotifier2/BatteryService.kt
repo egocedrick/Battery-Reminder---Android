@@ -6,13 +6,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.IBinder
-import android.app.admin.DevicePolicyManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 
@@ -34,20 +32,20 @@ class BatteryService : Service() {
 
             when {
                 batteryPct <= 5 -> {
-                    showNotification(NOTIF_5,"Battery Critical (5%)", "Device will lock.")
-
-                    val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                    val componentName = ComponentName(this@BatteryService, MyDeviceAdminReceiver::class.java)
-
-                    if (dpm.isAdminActive(componentName)) {
-                        dpm.lockNow()
-                    } else {
-                        showNotification(NOTIF_5, "Admin not active", "Cannot lock device. Please enable admin.")
-                        Log.e("BatteryService", "Device Admin not active, lockNow() skipped.")
-                    }
+                    showNotification(
+                        NOTIF_5,
+                        "⚠️ Battery Critical (5%)",
+                        "Danger zone — charge immediately.",
+                        urgent = true
+                    )
                 }
                 batteryPct <= 20 -> {
-                    showNotification(NOTIF_20,"Battery low (20%)", "Please charge soon.")
+                    showNotification(
+                        NOTIF_20,
+                        "Battery Warning (20%)",
+                        "Please charge your device soon.",
+                        urgent = false
+                    )
                 }
             }
         }
@@ -93,11 +91,22 @@ class BatteryService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     @SuppressLint("NotificationPermission")
-    private fun showNotification(id: Int = 0 ,title: String, message: String) {
+    private fun showNotification(id: Int, title: String, message: String, urgent: Boolean) {
         val notification = NotificationCompat.Builder(this, "battery_alerts")
             .setContentTitle(title)
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(
+                if (urgent) android.R.drawable.stat_sys_warning
+                else android.R.drawable.ic_dialog_alert
+            )
+            .setPriority(
+                if (urgent) NotificationCompat.PRIORITY_MAX
+                else NotificationCompat.PRIORITY_DEFAULT
+            )
+            .setCategory(
+                if (urgent) NotificationCompat.CATEGORY_ALARM
+                else NotificationCompat.CATEGORY_MESSAGE
+            )
             .build()
 
         val manager = getSystemService(NotificationManager::class.java)
