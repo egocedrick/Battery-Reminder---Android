@@ -21,6 +21,8 @@ class BatteryService : Service() {
         const val NOTIF_20 = 2000
         const val NOTIF_5 = 3000
     }
+        private var notified20 = false
+        private var notified5 = false
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -32,20 +34,20 @@ class BatteryService : Service() {
 
             when {
                 batteryPct <= 5 -> {
-                    showNotification(
-                        NOTIF_5,
-                        "⚠️ Battery Critical (5%)",
-                        "Danger zone — charge immediately.",
-                        urgent = true
-                    )
+                    if (!notified5) {
+                        showNotification(NOTIF_5, "⚠️ Battery Critical (5%)", "Danger zone — charge immediately.", urgent = true)
+                        notified5 = true
+                    }
                 }
                 batteryPct <= 20 -> {
-                    showNotification(
-                        NOTIF_20,
-                        "Battery Warning (20%)",
-                        "Please charge your device soon.",
-                        urgent = false
-                    )
+                    if (!notified20) {
+                        showNotification(NOTIF_20, "Battery Warning (20%)", "Please charge your device soon.", urgent = false)
+                        notified20 = true
+                    }
+                }
+                else -> {
+                    notified20 = false
+                    notified5 = false
                 }
             }
         }
